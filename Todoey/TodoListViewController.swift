@@ -12,8 +12,15 @@ class TodoListViewController: UITableViewController {
 
     var itemArray = ["Take Merlin to the vet", "Take Jasmine to the beach", "Chill"]
     
+    //interface to user's default database
+    let defaults = UserDefaults.standard
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        if let items = defaults.array(forKey: "TodoListArray") {
+            itemArray = items as! [String]
+        }
         
     }
 
@@ -61,6 +68,9 @@ class TodoListViewController: UITableViewController {
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
             //this will happen when the user taps the "Add Item" button
             self.itemArray.append(textField.text!)
+            
+            //save the newly updated itemArray to our default database
+            self.defaults.set(self.itemArray, forKey: "TodoListArray")
             
             //reload the data of the table view
             self.tableView.reloadData()
