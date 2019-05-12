@@ -10,7 +10,7 @@ import UIKit
 
 class TodoListViewController: UITableViewController {
 
-    var itemArray = ["Take Merlin to the vet", "Take Jasmine to the beach", "Chill"]
+    var itemArray = [Item]()
     
     //interface to user's default database
     let defaults = UserDefaults.standard
@@ -18,10 +18,21 @@ class TodoListViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        if let items = defaults.array(forKey: "TodoListArray") {
-            itemArray = items as! [String]
-        }
+        let newItem1 = Item()
+        newItem1.title = "Make some coffee"
+        itemArray.append(newItem1)
         
+        let newItem2 = Item()
+        newItem2.title = "Make some eggs"
+        itemArray.append(newItem2)
+        
+        let newItem3 = Item()
+        newItem3.title = "Do some dishes"
+        itemArray.append(newItem3)
+        
+        if let items = defaults.array(forKey: "TodoListArray") as? [Item] {
+            itemArray = items
+        }
     }
 
     //MARK - TableView Datasource Methods
@@ -29,7 +40,23 @@ class TodoListViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "TodoItemCell", for: indexPath)
         
-        cell.textLabel?.text = itemArray[indexPath.row]
+        //instead of typing out the itemArray[indexPath.row] all the time, assign it to a shorter constant
+        let item = itemArray[indexPath.row]
+        
+        cell.textLabel?.text = item.title
+        
+        //check the value of the done property of this instance of the Item class
+        //if true make checkmark, if false remove checkmark
+//        if item.done == true {
+//            cell.accessoryType = .checkmark
+//        }
+//        else {
+//            cell.accessoryType = .none
+//        }
+        
+        //let's fix the above code using the ternary operator
+        //value = condition ? valueIfTrue : valueIfFalse
+        cell.accessoryType = item.done ? .checkmark : .none
         
         return cell
     }
@@ -42,15 +69,19 @@ class TodoListViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
 //        print(itemArray[indexPath.row])
         
-        if tableView.cellForRow(at: indexPath)?.accessoryType == .checkmark {
-            //this will remove the checkmark from our cells
-            tableView.cellForRow(at: indexPath)?.accessoryType = .none
-        }
-        else {
-            //this will add a checkmark to our table cells
-            tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark
-        }
-
+        //check if the done property of this instance of the Item class is set
+        //set it to true if it is false and false if it is true
+//        if itemArray[indexPath.row].done == false {
+//            itemArray[indexPath.row].done = true
+//        }
+//        else {
+//            itemArray[indexPath.row].done = false
+//        }
+        
+        //instead of using the if else statement above, we can do this
+        itemArray[indexPath.row].done = !itemArray[indexPath.row].done
+        
+        tableView.reloadData()
         
         //this changes the row from staying highlighted in grey, to highlighting for a while and then going back to normal
         tableView.deselectRow(at: indexPath, animated: true)
@@ -67,7 +98,9 @@ class TodoListViewController: UITableViewController {
         //now create our action
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
             //this will happen when the user taps the "Add Item" button
-            self.itemArray.append(textField.text!)
+            let newItem = Item()
+            newItem.title = textField.text!
+            self.itemArray.append(newItem)
             
             //save the newly updated itemArray to our default database
             self.defaults.set(self.itemArray, forKey: "TodoListArray")
