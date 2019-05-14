@@ -8,7 +8,7 @@
 
 import Foundation
 
-class Item {
+class Item: Codable {
     //MARK - Create properties
     var title: String = ""
     var done: Bool = false

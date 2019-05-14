@@ -12,27 +12,12 @@ class TodoListViewController: UITableViewController {
 
     var itemArray = [Item]()
     
-    //interface to user's default database
-    let defaults = UserDefaults.standard
+    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let newItem1 = Item()
-        newItem1.title = "Make some coffee"
-        itemArray.append(newItem1)
-        
-        let newItem2 = Item()
-        newItem2.title = "Make some eggs"
-        itemArray.append(newItem2)
-        
-        let newItem3 = Item()
-        newItem3.title = "Do some dishes"
-        itemArray.append(newItem3)
-        
-        if let items = defaults.array(forKey: "TodoListArray") as? [Item] {
-            itemArray = items
-        }
+        loadItems()
     }
 
     //MARK - TableView Datasource Methods
@@ -44,15 +29,6 @@ class TodoListViewController: UITableViewController {
         let item = itemArray[indexPath.row]
         
         cell.textLabel?.text = item.title
-        
-        //check the value of the done property of this instance of the Item class
-        //if true make checkmark, if false remove checkmark
-//        if item.done == true {
-//            cell.accessoryType = .checkmark
-//        }
-//        else {
-//            cell.accessoryType = .none
-//        }
         
         //let's fix the above code using the ternary operator
         //value = condition ? valueIfTrue : valueIfFalse
@@ -67,21 +43,11 @@ class TodoListViewController: UITableViewController {
     
     //MARK - TableView Delegate Methods
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-//        print(itemArray[indexPath.row])
-        
         //check if the done property of this instance of the Item class is set
         //set it to true if it is false and false if it is true
-//        if itemArray[indexPath.row].done == false {
-//            itemArray[indexPath.row].done = true
-//        }
-//        else {
-//            itemArray[indexPath.row].done = false
-//        }
-        
-        //instead of using the if else statement above, we can do this
         itemArray[indexPath.row].done = !itemArray[indexPath.row].done
         
-        tableView.reloadData()
+        saveItems()
         
         //this changes the row from staying highlighted in grey, to highlighting for a while and then going back to normal
         tableView.deselectRow(at: indexPath, animated: true)
@@ -102,11 +68,7 @@ class TodoListViewController: UITableViewController {
             newItem.title = textField.text!
             self.itemArray.append(newItem)
             
-            //save the newly updated itemArray to our default database
-            self.defaults.set(self.itemArray, forKey: "TodoListArray")
-            
-            //reload the data of the table view
-            self.tableView.reloadData()
+            self.saveItems()
         }
         
         //add a textfield to our alert
@@ -122,6 +84,36 @@ class TodoListViewController: UITableViewController {
         present(alert, animated: true, completion: nil)
     }
     
+    func saveItems() {
+        //save the newly updated itemArray to our default database
+        //create new encoder object
+        let encoder = PropertyListEncoder()
+        
+        do {
+            let data = try encoder.encode(itemArray)
+            try data.write(to: dataFilePath!)
+        }
+        catch {
+            print("Error During Encoding, \(error)")
+        }
+        
+        //reload the data of the table view
+        tableView.reloadData()
+    }
     
+    func loadItems() {
+        //let's get our data
+        if let data = try? Data(contentsOf: dataFilePath!) {
+            //create our decoder object
+            let decoder = PropertyListDecoder()
+            
+            do {
+                itemArray = try decoder.decode([Item].self, from: data)
+            }
+            catch {
+                print("Error During Decoding, \(error)")
+            }
+        }
+    }
 }
 
